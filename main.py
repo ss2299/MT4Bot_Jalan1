@@ -8,6 +8,7 @@ from EncryptedInfo import EcryptedInfo
 import datetime
 import os, time
 import telegram
+import pyautogui
 
 
 def checkWords(data, target):
@@ -48,7 +49,7 @@ def print_hi(name):
     while True:
         try:
 
-            # 리스트 뷰의 내용이 변경되었는지 확인
+            # Check listview contents is updated
             if MT4.getListTexts("SysListView32") != listTexts:
                 listTexts = MT4.getListTexts("SysListView32")
 
@@ -72,24 +73,31 @@ def print_hi(name):
 
                 filename = f"./{output_path}/{filename}-{today}.{ext}"
 
+                # If there is no file then make blank new file
                 if not os.path.isfile(filename):
 
                     with open(filename, 'w') as file:
                         pass
 
-
+                # Handling list view contents
                 for i in range(len(templist)):
+                    # Time info
                     if i % 2 == 0:
                         tempTime = templist[i]
 
+                    # Message Contents
                     if i % 2 == 1:
                         tempMsg = templist[i]
                         mergeMsg = f"{tempTime} , {tempMsg} \n"
 
+
+                        # If there is no message in the log file
                         if not checkWords(filename, mergeMsg):
                             writeWords(filename, mergeMsg)
+
                             print(f"[Logging Success] {mergeMsg}")
                             bot.sendMessage(chat_id=eni.getChannelid('20K'), text=mergeMsg)
+                            # bot.sendMessage(chat_id=eni.getChannelid('GoldenLine_Jalan1'), text=mergeMsg)
 
 
         except Exception:
