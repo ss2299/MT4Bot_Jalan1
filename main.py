@@ -5,11 +5,9 @@
 import EncryptedInfo
 from MT4Hook import MT4Hook
 from EncryptedInfo import EcryptedInfo
-import time
-import os
+import datetime
+import os, time
 import telegram
-
-
 
 
 def checkWords(data, target):
@@ -31,7 +29,7 @@ def writeWords(data, target):
 
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+    print(f'{name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
     MT4 = MT4Hook()
     MT4.ConnectApp("FxPro")
@@ -42,7 +40,8 @@ def print_hi(name):
     tempMsg = ''
     listTexts = []
     tempList = []
-    filename = 'MT4log.txt'
+    filename = 'MT4log'
+    ext = 'txt'
 
     bot = telegram.Bot(token=eni.getToken())
 
@@ -57,7 +56,24 @@ def print_hi(name):
                 templist = listTexts.copy()
                 templist.remove('List1')
 
-                if not os.path.isfile((filename)):
+                # Current date for filename
+                filename = 'MT4log'
+                ext = 'txt'
+                today = datetime.date.today().strftime('%y%m%d')
+
+                # Current date for make directory
+                output_save_folder_path = './log/'
+                output_path = os.path.join(output_save_folder_path, time.strftime('%Y%m', time.localtime(time.time())))
+
+                if not os.path.exists(output_save_folder_path):
+                    os.mkdir(output_save_folder_path)
+                if not os.path.exists(output_path):
+                    os.mkdir(output_path)
+
+                filename = f"./{output_path}/{filename}-{today}.{ext}"
+
+                if not os.path.isfile(filename):
+
                     with open(filename, 'w') as file:
                         pass
 
@@ -73,12 +89,12 @@ def print_hi(name):
                         if not checkWords(filename, mergeMsg):
                             writeWords(filename, mergeMsg)
                             print(f"[Logging Success] {mergeMsg}")
-                            bot.sendMessage(chat_id=eni.getChannelid(), text=mergeMsg)
+                            bot.sendMessage(chat_id=eni.getChannelid('20K'), text=mergeMsg)
 
 
         except Exception:
-            now = time.localtime()
-            print(f'[{now.tm_year}/{now.tm_mon}/{now.tm_mday} {now.tm_hour}:{now.tm_min}:{now.tm_sec}] It is watching MT4')
+            now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'[{now}] It is watching MT4')
 
 
 # Press the green button in the gutter to run the script.
