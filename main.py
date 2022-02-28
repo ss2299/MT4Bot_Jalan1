@@ -49,6 +49,9 @@ def print_hi(name):
     while True:
         try:
 
+            # Loop Timer
+            time.sleep(2)
+
             # Check listview contents is updated
             if MT4.getListTexts("SysListView32") != listTexts:
                 listTexts = MT4.getListTexts("SysListView32")
@@ -98,6 +101,10 @@ def print_hi(name):
                             print(f"[Logging Success] {mergeMsg}")
                             bot.sendMessage(chat_id=eni.getChannelid('20K'), text=mergeMsg)
                             # bot.sendMessage(chat_id=eni.getChannelid('GoldenLine_Jalan1'), text=mergeMsg)
+
+                            # Send Message with interval
+                            time.sleep(1)
+
 
 
         except Exception:
