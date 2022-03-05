@@ -2,13 +2,25 @@
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-import EncryptedInfo
 from MT4Hook import MT4Hook
-from EncryptedInfo import EcryptedInfo
+from EncryptedInfo import EncryptedInfo
 import datetime
 import os, time
 import telegram
-import pyautogui
+import json
+
+
+# JSON file dumping object
+## symbol for Jason File Dump
+symbols = ["BITCOIN", "GOLD", "BRENT"]
+signals = ["OBOS", "SIGNAL"]
+obj = {}
+for symbol in symbols:
+    obj[symbol.upper()] = {}
+    for signal in signals:
+        obj[symbol.upper()][signal] = -1
+
+
 
 
 def checkWords(data, target):
@@ -28,15 +40,64 @@ def writeWords(data, target):
         file.write(target)
 
 
+
+def AutoTrading(mergeMsg):
+
+    buysells = ["Buy Cuy", "Sell Cuy", "BUY SIGNAL", "SELL SIGNAL"]
+
+    print(mergeMsg)
+    symbol = ''
+    for i in range(len(symbols)):
+        if mergeMsg.find(symbols[i]) > -1:
+            symbol = symbols[i]
+
+    for i in range(len(buysells)):
+
+        if mergeMsg.find(buysells[i]) > -1:
+            if i == 0:          # Buy Cuy, OBOS line UP trend
+                obj[symbol.upper()]['OBOS'] = 1
+
+            elif i == 1:
+                obj[symbol.upper()]['OBOS'] = 0
+
+            elif i == 2:
+                obj[symbol.upper()]['SIGNAL'] = 1
+
+            elif i == 3:
+                obj[symbol.upper()]['SIGNAL'] = 0
+
+
+    print(obj)
+
+    filename = 'MT5Interface.json'
+    with open(filename, 'w') as f:
+        json.dump(obj, f)
+
+    print("Json file dumped")
+
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
     print(f'{name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
+    # MT4 Platform handling function
+    # MT4 FXPro Real Account : 77114147
+    # MT4 FXPro Demo Account : 8849028
+    # InstaFOrex Demo Account : 65015254
+
+    programName = "8849028"
+
     MT4 = MT4Hook()
-    MT4.ConnectApp("FxPro")
+    MT4.ConnectApp(programName)
 
-    eni = EncryptedInfo.EcryptedInfo()
+    # Authorization file
+    eni = EncryptedInfo()
 
+    # MT5 AutoTrading Order Initialize
+    # Demo Account : 5436069
+    # account = 5436069
+    # MT5Login(eni, account)
+
+    # local variable
     tempTime = ''
     tempMsg = ''
     listTexts = []
@@ -96,6 +157,12 @@ def print_hi(name):
 
                         # If there is no message in the log file
                         if not checkWords(filename, mergeMsg):
+                            # SIGNAL 메세지 필터링
+                            if mergeMsg.find("NOW") > 0:
+                                continue
+
+                            AutoTrading(mergeMsg)
+
                             writeWords(filename, mergeMsg)
 
                             print(f"[Logging Success] {mergeMsg}")
@@ -103,13 +170,16 @@ def print_hi(name):
                             # bot.sendMessage(chat_id=eni.getChannelid('GoldenLine_Jalan1'), text=mergeMsg)
 
                             # Send Message with interval
-                            time.sleep(1)
+                            time.sleep(2)
+
+                            # Close Alarm window
+                            MT4.ClickButton('Dialog', 'Button')
 
 
 
         except Exception:
             now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            print(f'[{now}] It is watching MT4')
+            print(f'[{now}] It is watching Software Platform : {programName}')
 
 
 # Press the green button in the gutter to run the script.
