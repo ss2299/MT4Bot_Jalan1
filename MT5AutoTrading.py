@@ -1,12 +1,30 @@
+import datetime
 import os, time
 import json
 import MetaTrader5 as mt5
-import datetime
 from EncryptedInfo import EncryptedInfo
+
+
+def getSL(symbol, buysell, percentage):
+    info_tick = mt5.symbol_info_tick(symbol)
+    sl = 0
+
+    if buysell == "buy":
+        sl = info_tick.bid * (1 - percentage)
+
+    elif buysell == "sell":
+        sl = info_tick.ask * (1 + percentage)
+
+    return sl
+
 
 def order(symbol, volume, buysell):
 
-    ordertype = mt5.ORDER_TYPE_BUY
+    # 0.3% from current price
+    SLPercent = 0.002
+
+    sl = getSL(symbol=symbol, buysell=buysell, percentage=SLPercent)
+
     if buysell == "buy":
         ordertype = mt5.ORDER_TYPE_BUY
     elif buysell == 'sell':
@@ -18,11 +36,11 @@ def order(symbol, volume, buysell):
         "volume": volume,
         "type": ordertype,
         "price": mt5.symbol_info_tick(symbol).ask,
-        "sl": 0.0,
+        "sl": sl,
         "tp": 0.0,
         "deviation": 0,
         "magic": 23400,
-        "comment": "MT5 Auto",
+        "comment": f"MT5 Auto {buysell}",
         "type_time": mt5.ORDER_TIME_GTC,
         "type_filling": mt5.ORDER_FILLING_IOC,
     }
@@ -30,21 +48,46 @@ def order(symbol, volume, buysell):
     print(order)
 
 def closeAll(symbol):
-    position = mt5.positions_get(symbol=symbol)
-    volume = position[0][9]
 
-    # Sell position
-    print(position[0].type)
+    if mt5.positions_total() > 0:
+        position = mt5.positions_get(symbol=symbol)
+        volume = position[0].volume
+
+        if position[0].type == 1:
+            order(symbol=symbol, buysell="buy", volume=volume)
+            print("Sell Position is closed")
+
+        # Buy position
+        elif position[0].type == 0:
+            order(symbol=symbol, buysell="sell", volume=volume)
+            print("Buy Position is closed")
+
+    else:
+        print("You don't have any positions")
 
 
-    if position[0].type == 1:
-        print("Sell Position")
-        order(symbol=symbol, buysell="buy", volume=volume)
 
-    # Buy position
-    elif position[0].type == 0:
-        print("Buy Position")
-        order(symbol=symbol, buysell="sell", volume=volume)
+def writeWords(symbol, msg):
+    # Current date for make directory
+    output_save_folder_path = './log/'
+    output_path = os.path.join(output_save_folder_path, time.strftime('%Y%m', time.localtime(time.time())))
+    today = datetime.date.today().strftime('%y%m%d')
+
+    if not os.path.exists(output_save_folder_path):
+        os.mkdir(output_save_folder_path)
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+
+    filename = f"./{output_path}/OBOS_{symbol}-{today}.txt"
+
+    # If there is no file then make blank new file
+    if not os.path.isfile(filename):
+        with open(filename, 'w') as file:
+            pass
+
+    with open(filename, 'a+', encoding='UTF8') as file:
+        file.write(msg)
+
 
 
 def main(name):
@@ -72,7 +115,6 @@ def main(name):
     eni = EncryptedInfo()
 
 
-
     ## Metatrader 5
     login = 5436069
     password, server = eni.getMT5info(login)
@@ -82,7 +124,7 @@ def main(name):
         mt5.shutdown()
 
     mt5_symbol = "BITCOIN"
-    lot = 1
+    lot = 0.01
 
     # order(symbol=mt5_symbol, volume=lot, buysell="sell")
 
@@ -106,14 +148,28 @@ def main(name):
                     print("OBOS IS UP!")
                     closeAll(symbol=mt5_symbol)
                     time.sleep(1)
-                    order(symbol=mt5_symbol, volume=lot, buysell="buy")
+                    order(symbol=mt5_symbol, buysell="buy", volume=lot)
+                    writeWords(symbol=mt5_symbol, msg=f"[{now}] OBOS IS UP. \n")
 
 
                 elif obj_new['BITCOIN']['OBOS'] == 0:
                     print("OBOS IS DOWN!")
                     closeAll(symbol=mt5_symbol)
                     time.sleep(1)
-                    order(symbol=mt5_symbol, volume=lot, buysell="sell")
+                    order(symbol=mt5_symbol, buysell="sell", volume=lot)
+                    writeWords(symbol=mt5_symbol, msg=f"[{now}] OBOS IS DOWN. \n")
+
+                elif obj_new['BITCOIN']['SIGNAL'] == 1:
+                    print("SIGNAL IS DOWN!")
+                    # position = mt5.positions_get(symbol=symbol)
+                    # if position.type == 0 and position.volume > 0:      # If we have sell position
+                    #     closeAll()
+
+
+                elif obj_new['BITCOIN']['SIGNAL'] == 0:
+                    print("SIGNAL IS DOWN!")
+                    # if position.type == 1 and position.volume > 0:      # If we have buy position
+                    #     closeAll()
 
 
 

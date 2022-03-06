@@ -56,15 +56,20 @@ def AutoTrading(mergeMsg):
         if mergeMsg.find(buysells[i]) > -1:
             if i == 0:          # Buy Cuy, OBOS line UP trend
                 obj[symbol.upper()]['OBOS'] = 1
+                print(symbol, 'OBOS Indicator IS BUY')
+
 
             elif i == 1:
                 obj[symbol.upper()]['OBOS'] = 0
+                print(symbol, 'OBOS Indicator IS SELL')
 
             elif i == 2:
                 obj[symbol.upper()]['SIGNAL'] = 1
+                print(symbol, 'SIGNAL Indicator IS BUY')
 
             elif i == 3:
                 obj[symbol.upper()]['SIGNAL'] = 0
+                print(symbol, 'SIGNAL Indicator IS SELL')
 
 
     print(obj)
