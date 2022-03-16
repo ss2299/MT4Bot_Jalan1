@@ -8,13 +8,13 @@ from EncryptedInfo import EncryptedInfo
 from ta import trend
 
 # Flag from CCI value above or under threshold level
-CCI_overbuy_M1 = False
-CCI_overbuy_M5 = False
+CCI_overbuy_M1 = True
+CCI_overbuy_M5 = True
 CCI_overbuy_M15 = False
 CCI_overbuy_H1 = False
 
-CCI_oversell_M1 = False
-CCI_oversell_M5 = False
+CCI_oversell_M1 = True
+CCI_oversell_M5 = True
 CCI_oversell_M15 = False
 CCI_oversell_H1 = False
 
@@ -22,23 +22,23 @@ CCI_oversell_H1 = False
 # Close buy position when CCI below than CCI-SMA
 CCI_overbuy_M1_close = False
 CCI_overbuy_M5_close = False
-CCI_overbuy_M15_close = True
+CCI_overbuy_M15_close = False
 CCI_overbuy_H1_close = False
 
 CCI_oversell_M1_close = False
 CCI_oversell_M5_close = False
-CCI_oversell_M15_close = True
+CCI_oversell_M15_close = False
 CCI_oversell_H1_close = False
 
 # Close buy position when CCI below than CCI-SMA
 CCI_overbuy_M1_notice = False
 CCI_overbuy_M5_notice = False
-CCI_overbuy_M15_notice = True
+CCI_overbuy_M15_notice = False
 CCI_overbuy_H1_notice = False
 
 CCI_oversell_M1_notice = False
 CCI_oversell_M5_notice = False
-CCI_oversell_M15_notice = True
+CCI_oversell_M15_notice = False
 CCI_oversell_H1_notice = False
 
 
@@ -185,64 +185,64 @@ def checkCCI(dfM1, dfM5, dfM15, dfH1):
     sizeM15 = dfM15.shape[0]
     sizeH1 = dfH1.shape[0]
 
-    # overbuy
-    if not CCI_overbuy_M1 and dfM1['CCI'][sizeM1-1] >= overbuy_level:
-        CCI_overbuy_M1 = True
-        print('[Start] It is overbuy in M1')
-    elif CCI_overbuy_M1 and dfM1['CCI'][sizeM1-1] < overbuy_level:
-        CCI_overbuy_M1 = False
-        print('[Finish] It is overbuy in M1')
-
-    if not CCI_overbuy_M5 and dfM5['CCI'][sizeM5-1] >= overbuy_level:
-        CCI_overbuy_M5 = True
-        print('[Start] It is overbuy in M5')
-    elif CCI_overbuy_M5 and dfM5['CCI'][sizeM5-1] < overbuy_level:
-        CCI_overbuy_M5 = False
-        print('[Finish] It is overbuy in M5')
-
-    if not CCI_overbuy_M15 and dfM15['CCI'][sizeM15-1] >= overbuy_level:
-        CCI_overbuy_M15 = True
-        print('[Start] It is overbuy in M15')
-    elif CCI_overbuy_M15 and dfM15['CCI'][sizeM15-1] < overbuy_level:
-        CCI_overbuy_M15 = False
-        print('[Finish] It is overbuy in M15')
-
-    if not CCI_overbuy_H1 and dfH1['CCI'][sizeH1-1] >= overbuy_level:
-        CCI_overbuy_H1 = True
-        print('[Start] It is overbuy in H1')
-    elif CCI_overbuy_H1 and dfH1['CCI'][sizeH1-1] < overbuy_level:
-        CCI_overbuy_H1 = False
-        print('[Finish] It is overbuy in H1')
-
-
-    # oversell
-    if not CCI_oversell_M1 and dfM1['CCI'][sizeM1-1] <= oversell_level:
-        CCI_oversell_M1 = True
-        print('[Start] It is oversell in M1')
-    elif CCI_oversell_M1 and dfM1['CCI'][sizeM1-1] > oversell_level:
-        CCI_oversell_M1 = False
-        print('[Finish] It is oversell in M1')
-
-    if not CCI_oversell_M5 and dfM5['CCI'][sizeM5-1] <= oversell_level:
-        CCI_oversell_M5 = True
-        print('[Start] It is oversell in M5')
-    elif CCI_oversell_M5 and dfM5['CCI'][sizeM5-1] > oversell_level:
-        CCI_oversell_M5 = False
-        print('[Finish] It is oversell in M5')
-
-    if not CCI_oversell_M15 and dfM5['CCI'][sizeM15-1] <= oversell_level:
-        CCI_oversell_M15 = True
-        print('[Start] It is oversell in M15')
-    elif CCI_oversell_M15 and dfM15['CCI'][sizeM15-1] > oversell_level:
-        CCI_oversell_M15 = False
-        print('[Finish] It is oversell in M15')
-
-    if not CCI_oversell_H1 and dfH1['CCI'][sizeH1-1] <= oversell_level:
-        CCI_oversell_H1 = True
-        print('[Start] It is oversell in H1')
-    elif CCI_oversell_H1 and dfH1['CCI'][sizeH1-1] > oversell_level:
-        CCI_oversell_H1 = False
-        print('[Finish] It is oversell in H1')
+    # # overbuy
+    # if not CCI_overbuy_M1 and dfM1['CCI'][sizeM1-1] >= overbuy_level:
+    #     CCI_overbuy_M1 = True
+    #     print('[Start] It is overbuy in M1')
+    # elif CCI_overbuy_M1 and dfM1['CCI'][sizeM1-1] < overbuy_level:
+    #     CCI_overbuy_M1 = False
+    #     print('[Finish] It is overbuy in M1')
+    #
+    # if not CCI_overbuy_M5 and dfM5['CCI'][sizeM5-1] >= overbuy_level:
+    #     CCI_overbuy_M5 = True
+    #     print('[Start] It is overbuy in M5')
+    # elif CCI_overbuy_M5 and dfM5['CCI'][sizeM5-1] < overbuy_level:
+    #     CCI_overbuy_M5 = False
+    #     print('[Finish] It is overbuy in M5')
+    #
+    # if not CCI_overbuy_M15 and dfM15['CCI'][sizeM15-1] >= overbuy_level:
+    #     CCI_overbuy_M15 = True
+    #     print('[Start] It is overbuy in M15')
+    # elif CCI_overbuy_M15 and dfM15['CCI'][sizeM15-1] < overbuy_level:
+    #     CCI_overbuy_M15 = False
+    #     print('[Finish] It is overbuy in M15')
+    #
+    # if not CCI_overbuy_H1 and dfH1['CCI'][sizeH1-1] >= overbuy_level:
+    #     CCI_overbuy_H1 = True
+    #     print('[Start] It is overbuy in H1')
+    # elif CCI_overbuy_H1 and dfH1['CCI'][sizeH1-1] < overbuy_level:
+    #     CCI_overbuy_H1 = False
+    #     print('[Finish] It is overbuy in H1')
+    #
+    #
+    # # oversell
+    # if not CCI_oversell_M1 and dfM1['CCI'][sizeM1-1] <= oversell_level:
+    #     CCI_oversell_M1 = True
+    #     print('[Start] It is oversell in M1')
+    # elif CCI_oversell_M1 and dfM1['CCI'][sizeM1-1] > oversell_level:
+    #     CCI_oversell_M1 = False
+    #     print('[Finish] It is oversell in M1')
+    #
+    # if not CCI_oversell_M5 and dfM5['CCI'][sizeM5-1] <= oversell_level:
+    #     CCI_oversell_M5 = True
+    #     print('[Start] It is oversell in M5')
+    # elif CCI_oversell_M5 and dfM5['CCI'][sizeM5-1] > oversell_level:
+    #     CCI_oversell_M5 = False
+    #     print('[Finish] It is oversell in M5')
+    #
+    # if not CCI_oversell_M15 and dfM5['CCI'][sizeM15-1] <= oversell_level:
+    #     CCI_oversell_M15 = True
+    #     print('[Start] It is oversell in M15')
+    # elif CCI_oversell_M15 and dfM15['CCI'][sizeM15-1] > oversell_level:
+    #     CCI_oversell_M15 = False
+    #     print('[Finish] It is oversell in M15')
+    #
+    # if not CCI_oversell_H1 and dfH1['CCI'][sizeH1-1] <= oversell_level:
+    #     CCI_oversell_H1 = True
+    #     print('[Start] It is oversell in H1')
+    # elif CCI_oversell_H1 and dfH1['CCI'][sizeH1-1] > oversell_level:
+    #     CCI_oversell_H1 = False
+    #     print('[Finish] It is oversell in H1')
 
 
 
@@ -301,19 +301,6 @@ def main(name):
     delayTime = 1        # second
     filename = './MT5Interface.json'
 
-    ## Json object
-    ## -1 = Default, 1 = Buy, 0 = Sell
-    ## symbol for Searching in Dialog
-    symbols = ["BITCOIN", "GOLD", "BRENT"]
-    signals = ["OBOS", "SIGNAL"]
-
-    obj_new = {}
-    obj_pre = {}
-    for symbol in symbols:
-        obj_pre[symbol.upper()] = {}
-        for signal in signals:
-            obj_pre[symbol.upper()][signal] = -1
-
     ## Sync authoization info
     eni = EncryptedInfo()
 
@@ -334,9 +321,11 @@ def main(name):
 
 
 
-    mt5_symbol = "BITCOIN"
-    lot = 0.01
+    mt5_symbol = "GOLD"
+    timeframe = "5"         # minutes
+    lot = 0.5
     timecounter = 1
+    obj_pre = {}
 
     while True:
 
@@ -345,7 +334,6 @@ def main(name):
             now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             print(f"[{now}] {obj_new}")
 
-
         if obj_pre != obj_new:
             if init:
                 obj_pre = obj_new
@@ -353,8 +341,10 @@ def main(name):
                 init = False
                 continue
 
-            if obj_new['BITCOIN']['OBOS'] != obj_pre['BITCOIN']['OBOS']:
-                if obj_new['BITCOIN']['OBOS'] == 1:
+            print(f"[{now}] {obj_new}")
+
+            if obj_new[mt5_symbol][timeframe] != obj_pre[mt5_symbol][timeframe]:
+                if obj_new[mt5_symbol][timeframe] == 1:
                     print("OBOS IS UP!")
                     closeAll(symbol=mt5_symbol)
                     time.sleep(1)
@@ -362,24 +352,12 @@ def main(name):
                     writeWords(symbol=mt5_symbol, msg=f"[{now}] OBOS IS UP. \n")
 
 
-                elif obj_new['BITCOIN']['OBOS'] == 0:
+                elif obj_new[mt5_symbol]['timeframe'] == 0:
                     print("OBOS IS DOWN!")
                     closeAll(symbol=mt5_symbol)
                     time.sleep(1)
                     order(symbol=mt5_symbol, buysell="sell", volume=lot)
                     writeWords(symbol=mt5_symbol, msg=f"[{now}] OBOS IS DOWN. \n")
-
-                elif obj_new['BITCOIN']['SIGNAL'] == 1:
-                    print("SIGNAL IS DOWN!")
-                    # position = mt5.positions_get(symbol=symbol)
-                    # if position.type == 0 and position.volume > 0:      # If we have sell position
-                    #     closeAll()
-
-
-                elif obj_new['BITCOIN']['SIGNAL'] == 0:
-                    print("SIGNAL IS DOWN!")
-                    # if position.type == 1 and position.volume > 0:      # If we have buy position
-                    #     closeAll()
 
 
 

@@ -13,12 +13,18 @@ import json
 # JSON file dumping object
 ## symbol for Jason File Dump
 symbols = ["BITCOIN", "GOLD", "BRENT"]
-signals = ["OBOS", "SIGNAL"]
+timings = ["1", "5", "15", "30", "60", "240", "1440"]
+
 obj = {}
-for symbol in symbols:
-    obj[symbol.upper()] = {}
-    for signal in signals:
-        obj[symbol.upper()][signal] = -1
+
+obj_init = True
+if obj_init:
+    obj_init = False
+    for symbol in symbols:
+        obj[symbol.upper()] = {}
+        for timing in timings:
+            obj[symbol.upper()][timing] = -1
+
 
 
 
@@ -40,37 +46,16 @@ def writeWords(data, target):
         file.write(target)
 
 
+def signalCollector(msg):
+    msgs = msg.split()
 
-def AutoTrading(mergeMsg):
+    buycuy = "Buy Cuy"
+    sellcuy = "Sell Cuy"
 
-    buysells = ["Buy Cuy", "Sell Cuy", "BUY SIGNAL", "SELL SIGNAL"]
-
-    print(mergeMsg)
-    symbol = ''
-    for i in range(len(symbols)):
-        if mergeMsg.find(symbols[i]) > -1:
-            symbol = symbols[i]
-
-    for i in range(len(buysells)):
-
-        if mergeMsg.find(buysells[i]) > -1:
-            if i == 0:          # Buy Cuy, OBOS line UP trend
-                obj[symbol.upper()]['OBOS'] = 1
-                print(symbol, 'OBOS Indicator IS BUY')
-
-
-            elif i == 1:
-                obj[symbol.upper()]['OBOS'] = 0
-                print(symbol, 'OBOS Indicator IS SELL')
-
-            elif i == 2:
-                obj[symbol.upper()]['SIGNAL'] = 1
-                print(symbol, 'SIGNAL Indicator IS BUY')
-
-            elif i == 3:
-                obj[symbol.upper()]['SIGNAL'] = 0
-                print(symbol, 'SIGNAL Indicator IS SELL')
-
+    if buycuy in msg:
+        obj[msgs[0]][msgs[1]] = 1
+    elif sellcuy in msg:
+        obj[msgs[0]][msgs[1]] = 0
 
     print(obj)
 
@@ -79,6 +64,10 @@ def AutoTrading(mergeMsg):
         json.dump(obj, f)
 
     print("Json file dumped")
+
+
+
+
 
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
@@ -89,7 +78,7 @@ def print_hi(name):
     # MT4 FXPro Demo Account : 8849028
     # InstaFOrex Demo Account : 65015254
 
-    programName = "8849028"
+    programName = "77114147"
 
     MT4 = MT4Hook()
     MT4.ConnectApp(programName)
@@ -166,8 +155,10 @@ def print_hi(name):
                             if mergeMsg.find("NOW") > 0:
                                 continue
 
-                            AutoTrading(mergeMsg)
+                            if mergeMsg.find("SIGNAL") > 0:
+                                continue
 
+                            signalCollector(tempMsg)
                             writeWords(filename, mergeMsg)
 
                             print(f"[Logging Success] {mergeMsg}")
@@ -178,7 +169,7 @@ def print_hi(name):
                             time.sleep(2)
 
                             # Close Alarm window
-                            MT4.ClickButton('Dialog', 'Button')
+                            # MT4.ClickButton('Dialog', 'Button')
 
 
 
