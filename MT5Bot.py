@@ -48,7 +48,6 @@ def main(name):
     obos_lower_cnt = 0
     cnt_threshold = 7
     obos_status_trend = 0       # 1 : Up, -1 : Down   -> for 1 time order
-    obos_status_golden = 0      # 1 : Meet Golden line upper,   -1 : Meet Golden line lower   -> To Catch Goldenline area 1 time during a OBOS cycle
     obos_upper_level = 0.7
     obos_lower_level = -0.7
 
@@ -62,8 +61,6 @@ def main(name):
     ## Golden Line variable
     GL_OB_flag = False
     GL_OS_flag = False
-    GL_CCIOB_flag = False
-    GL_CCIOS_flag = False
 
     ## Buy, Sell Flag
     orderBuy_flag = False
@@ -154,7 +151,7 @@ def main(name):
                 CCI_OB_flag = True
 
             if CCI_OB_flag:
-                if cci < ccima:
+                if cci < ccima or cci <= 100:
                     closeBuy_flag = True
 
                     if GL_OB_flag:
@@ -168,11 +165,7 @@ def main(name):
                 CCI_OS_flag = True
 
             if CCI_OS_flag:
-                # When CCI is higher than CCI Oversell Threshold
-                # if cci > CCI_OS:
-                #     closeSell_flag = True
-
-                if cci > ccima:
+                if cci > ccima or cci >= -100:
                     closeSell_flag = True
 
                     if GL_OS_flag:
