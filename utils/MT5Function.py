@@ -116,6 +116,7 @@ class MT5Function:
     def getCCI(self, df, window):
         return trend.CCIIndicator(high=df['high'], low=df['low'], close=df['close'], window=window).cci()
 
+
     def getCCISMA(self, df, window):
         return trend.sma_indicator(close=df['CCI'], window=window)
 

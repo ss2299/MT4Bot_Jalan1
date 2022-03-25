@@ -89,6 +89,8 @@ def main(name):
             fl1_lower = msg['FL1_lower']
             gl_upper = msg['GL_upper']
             gl_lower = msg['GL_lower']
+            cci = msg['CCI']
+            ccima = msg['CCIMA']
 
             if obos_upper > obos_lower:
                 obos_upper_cnt = obos_upper_cnt + 1
@@ -126,36 +128,34 @@ def main(name):
             CCI_OB = 220
             CCI_OS = -220
 
-            df = MT5.getOHLC(symbol, timeframe, 30)
-            df['CCI'] = MT5.getCCI(df=df, window=14)
-            df['CCISMA'] = MT5.getCCISMA(df=df, window=5)
+
 
             # CCI
             ## OverBought
-            if df.iloc[-1]['CCI'] > CCI_OB:
+            if cci > CCI_OB:
                 CCI_OB_flag = True
 
             if CCI_OB_flag:
-                # if df.iloc[-1]['CCI'] < CCI_OB:
+                # if cci < CCI_OB:
                 #     closeBuy_flag = True
 
-                if df.iloc[-1]['CCI'] < df.iloc[-1]['CCISMA']:
+                if cci < ccima:
                     closeBuy_flag = True
 
 
             ## OverSell
-            if df.iloc[-1]['CCI'] < CCI_OS:
+            if cci < CCI_OS:
                 CCI_OS_flag = True
 
             if CCI_OS_flag:
                 # When CCI is higher than CCI Oversell Threshold
-                # if df.iloc[-1]['CCI'] > CCI_OS:
+                # if cci > CCI_OS:
                 #     closeSell_flag = True
 
-                if df.iloc[-1]['CCI'] > df.iloc[-1]['CCISMA']:
+                if cci > ccima:
                     closeSell_flag = True
 
-            text += f"CCI:{df.iloc[-1]['CCI']:.2f} ,  CCISMA:{df.iloc[-1]['CCISMA']:.2f} , OB_flag:{CCI_OB_flag} , OS_flag:{CCI_OS_flag}, OBOS_Status : {obos_status},  "
+            text += f"CCI:{cci} ,  CCISMA:{ccima} , OB_flag:{CCI_OB_flag} , OS_flag:{CCI_OS_flag}, OBOS_Status : {obos_status},  "
 
 
             # Close by CCI Condition
