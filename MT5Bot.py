@@ -43,22 +43,27 @@ def main(name):
     sleepDelay = 5      # Second
     MT5 = MT5Function(89470822)
 
+    ## OBOS Status
     obos_upper_cnt = 0
     obos_lower_cnt = 0
     cnt_threshold = 7
-    obos_status = 0     # 1 : Up, -1 : Down
+    obos_status_trend = 0       # 1 : Up, -1 : Down   -> for 1 time order
+    obos_status_golden = 0      # 1 : Meet Golden line upper,   -1 : Meet Golden line lower   -> To Catch Goldenline area 1 time during a OBOS cycle
     obos_upper_level = 0.7
     obos_lower_level = -0.7
 
+    ## Read Json file
     dc = DataCollect(symbol=symbol, timeframe=timeframe)
 
     ## CCI variable
     CCI_OB_flag = False
     CCI_OS_flag = False
-    CCI_up_cnt = 0
-    CCI_dn_cnt = 0
-    CCI_divergence_threshold = cnt_threshold * 2
 
+    ## Golden Line variable
+    GL_OB_flag = False
+    GL_OS_flag = False
+    GL_CCIOB_flag = False
+    GL_CCIOS_flag = False
 
     ## Buy, Sell Flag
     orderBuy_flag = False
@@ -125,10 +130,23 @@ def main(name):
 
 
             # OB, OS Limit
-            CCI_OB = 220
-            CCI_OS = -220
+            CCI_OB = 200
+            CCI_OS = -200
 
 
+
+            # Golden Line Trading
+            # Definition of Golden Area Condition (Upper)
+            if close >= gl_upper:
+                GL_OB_flag = True
+            elif GL_OB_flag and close < fl1_upper:
+                GL_OB_flag = False
+
+            # Definition of Golden Are Condition (Lower)
+            if close <= gl_lower:
+                GL_OS_flag = True
+            elif GL_OS_flag and close > fl1_lower:
+                GL_OB_flag = False
 
             # CCI
             ## OverBought
@@ -136,11 +154,13 @@ def main(name):
                 CCI_OB_flag = True
 
             if CCI_OB_flag:
-                # if cci < CCI_OB:
-                #     closeBuy_flag = True
-
                 if cci < ccima:
                     closeBuy_flag = True
+
+                    if GL_OB_flag:
+                        orderSell_flag = True
+
+
 
 
             ## OverSell
@@ -155,7 +175,13 @@ def main(name):
                 if cci > ccima:
                     closeSell_flag = True
 
-            text += f"CCI:{cci} ,  CCISMA:{ccima} , OB_flag:{CCI_OB_flag} , OS_flag:{CCI_OS_flag}, OBOS_Status : {obos_status},  "
+                    if GL_OS_flag:
+                        orderBuy_flag = True
+
+
+
+
+            text += f"CCI:{cci} ,  CCISMA:{ccima} , OB_flag:{CCI_OB_flag} , OS_flag:{CCI_OS_flag}, OBOS_Status : {obos_status_trend},  "
 
 
             # Close by CCI Condition
@@ -177,9 +203,23 @@ def main(name):
                 CCI_OS_flag = False
 
 
+            if orderBuy_flag:
+                MT5.order(symbol=symbol, buysell="buy", volume=volume, slpercent=0.002, tppercent=0.00315,
+                          comment="Golden", magic=2299)
+                orderBuy_flag = False
+
+            if orderBuy_flag:
+                MT5.order(symbol=symbol, buysell="sell", volume=volume, slpercent=0.002, tppercent=0.00315,
+                          comment="Golden", magic=2299)
+                orderBuy_flag = False
+
+
+
+
             ## Enter ORDER by OBOS
-            if obos_upper_cnt >= cnt_threshold and obos_status != 1 :
-                obos_status = 1
+            if obos_upper_cnt >= cnt_threshold and obos_status_trend != 1 :
+                obos_status_trend = 1  # 1-time enter to this if phase, prevent multiple time enter during obos cycle.
+                obos_status_golden = 1  # For GoldenLine Area
                 if init:
                     init = False
                     continue
@@ -194,8 +234,10 @@ def main(name):
                 text += "Buy Order is Completed by OBOS"
                 CCI_OB_flag = False             # Filter CCI close condition when enter order.
 
-            elif obos_lower_cnt >= cnt_threshold and obos_status != -1:
-                obos_status = -1
+            elif obos_lower_cnt >= cnt_threshold and obos_status_trend != -1:
+                obos_status_trend = -1      # 1-time enter to this if phase, prevent multiple time enter during obos cycle.
+                obos_status_golden = -1     # For GoldenLine Area
+
                 if init:
                     init = False
                     continue
@@ -203,12 +245,17 @@ def main(name):
                     # MT5.closeAll(symbol=symbol)
                     MT5.closePosition(symbol=symbol, position="buy")
 
+
+
                 # Filtering small wave channel
                 # if obos_lower > fl1_upper and obos_lower > obos_upper_level:
                 # if zone != 0:
                 MT5.order(symbol=symbol, buysell="sell", volume=volume, slpercent=0.002, tppercent=0.00315, comment="OBOS", magic=2299)
                 text += "Sell Order is Completed by OBOS"
                 CCI_OS_flag = False  # Filter CCI close condition when enter order.
+
+
+
 
 
 
