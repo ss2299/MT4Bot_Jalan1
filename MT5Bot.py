@@ -1,10 +1,11 @@
 from utils.MT5Function import MT5Function
 from utils.DataCollect import DataCollect
-from utils.FileWrite import FileWrite
+from EncryptedInfo import EncryptedInfo
 import time
 import datetime
-import pandas as pd
 import os
+import telegram
+import pyautogui
 
 
 def writeWords(symbol, timeframe, msg):
@@ -29,13 +30,20 @@ def writeWords(symbol, timeframe, msg):
         file.write(msg)
 
 
+def SendPhoto(bot, eni, msg):
+    screenimage = pyautogui.screenshot("screen.png")
+    screenimage.save("screen.png")
+    photo = open("screen.png", 'rb')
+    bot.sendPhoto(chat_id=eni.getChannelid('20K'), photo=photo, caption=msg)
+
+
 
 
 def main(name):
     # Order
-    symbol = 'XAUUSD'
+    symbol = 'BTCUSD'
     timeframe = 5
-    volume = 0.1
+    volume = 0.01
 
 
 
@@ -69,6 +77,9 @@ def main(name):
     closeSell_flag = False
 
 
+    # Telegram
+    eni = EncryptedInfo()
+    bot = telegram.Bot(token=eni.getToken())
 
     # Init variable
     init = True
@@ -143,7 +154,7 @@ def main(name):
             if close <= gl_lower:
                 GL_OS_flag = True
             elif GL_OS_flag and close > fl1_lower:
-                GL_OB_flag = False
+                GL_OS_flag = False
 
             # CCI
             ## OverBought
@@ -197,14 +208,18 @@ def main(name):
 
 
             if orderBuy_flag:
-                MT5.order(symbol=symbol, buysell="buy", volume=volume, slpercent=0.002, tppercent=0.00315,
+                result = MT5.order(symbol=symbol, buysell="buy", volume=volume, slpercent=0.002, tppercent=0.00315,
                           comment="Golden", magic=2299)
                 orderBuy_flag = False
+                time.sleep(0.2)
+                SendPhoto(bot, eni, "Buy Order by Golden , " + result)
 
-            if orderBuy_flag:
-                MT5.order(symbol=symbol, buysell="sell", volume=volume, slpercent=0.002, tppercent=0.00315,
+            if orderSell_flag:
+                result = MT5.order(symbol=symbol, buysell="sell", volume=volume, slpercent=0.002, tppercent=0.00315,
                           comment="Golden", magic=2299)
-                orderBuy_flag = False
+                orderSell_flag = False
+                time.sleep(0.2)
+                SendPhoto(bot, eni, "Sell Order by Golden , ")
 
 
 
@@ -212,9 +227,10 @@ def main(name):
             ## Enter ORDER by OBOS
             if obos_upper_cnt >= cnt_threshold and obos_status_trend != 1 :
                 obos_status_trend = 1  # 1-time enter to this if phase, prevent multiple time enter during obos cycle.
-                obos_status_golden = 1  # For GoldenLine Area
-                if init:
+
+                if init == True:
                     init = False
+                    SendPhoto(bot, eni, "init in obos up")
                     continue
                 if MT5.positions_total() > 0:
                     # MT5.closeAll(symbol=symbol)
@@ -223,16 +239,22 @@ def main(name):
                 # Filtering small wave channel
                 # if obos_lower < fl1_lower and obos_lower < obos_lower_level:
                 # if zone != 0:
-                MT5.order(symbol=symbol, buysell="buy", volume=volume, slpercent=0.002, tppercent=0.00315, comment="OBOS", magic=2299)
+                result = MT5.order(symbol=symbol, buysell="buy", volume=volume, slpercent=0.002, tppercent=0.00315, comment="OBOS", magic=2299)
                 text += "Buy Order is Completed by OBOS"
                 CCI_OB_flag = False             # Filter CCI close condition when enter order.
+
+                time.sleep(0.2)
+                SendPhoto(bot, eni, "Buy Order by OBOS , ")
+
+
 
             elif obos_lower_cnt >= cnt_threshold and obos_status_trend != -1:
                 obos_status_trend = -1      # 1-time enter to this if phase, prevent multiple time enter during obos cycle.
                 obos_status_golden = -1     # For GoldenLine Area
 
-                if init:
+                if init == True:
                     init = False
+                    SendPhoto(bot, eni, "init in obos dn")
                     continue
                 if MT5.positions_total() > 0:
                     # MT5.closeAll(symbol=symbol)
@@ -243,9 +265,12 @@ def main(name):
                 # Filtering small wave channel
                 # if obos_lower > fl1_upper and obos_lower > obos_upper_level:
                 # if zone != 0:
-                MT5.order(symbol=symbol, buysell="sell", volume=volume, slpercent=0.002, tppercent=0.00315, comment="OBOS", magic=2299)
+                result = MT5.order(symbol=symbol, buysell="sell", volume=volume, slpercent=0.002, tppercent=0.00315, comment="OBOS", magic=2299)
                 text += "Sell Order is Completed by OBOS"
                 CCI_OS_flag = False  # Filter CCI close condition when enter order.
+
+                time.sleep(0.2)
+                SendPhoto(bot, eni, "Sell Order by OBOS , ")
 
 
 
@@ -262,8 +287,6 @@ def main(name):
         except Exception:
             now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             print(f'[{now}] Exception : {Exception}')
-
-
 
 
 

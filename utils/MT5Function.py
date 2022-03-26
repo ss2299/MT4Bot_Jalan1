@@ -42,8 +42,6 @@ class MT5Function:
 
         order = mt5.order_send(request)
         print(order)
-        FileWrite.writeWords(symbol=symbol, msg=order)
-
 
     def getSL(self, symbol, buysell, percentage):
         info_tick = mt5.symbol_info_tick(symbol)
