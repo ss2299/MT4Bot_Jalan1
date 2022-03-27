@@ -43,7 +43,7 @@ def main(name):
     # Order
     symbol = 'BTCUSD'
     timeframe = 5
-    volume = 0.01
+    volume = 0.05
 
 
 
@@ -179,7 +179,7 @@ def main(name):
                     CCI_status_order = 1
                     orderBuy_flag = True
 
-                if zone == 2 and cci >= CCI_OS and CCI_status_order != 1:          # Golden Area Upper
+                if zone == -2 and cci >= CCI_OS and CCI_status_order != 1:          # Golden Area Upper
                     CCI_status_order = 1
                     orderBuy_flag = True
 
@@ -229,11 +229,11 @@ def main(name):
                 orderBuy_flag = False
 
                 result = MT5.order(symbol=symbol, buysell="buy", volume=volume, slpercent=0.002, tppercent=0.02,
-                                   comment="", magic=2299)
+                                   comment="Order Buy", magic=2299)
                 # writeWords(symbol=symbol, timeframe=timeframe, msg=result)
 
                 text += f"Buy Order"
-                time.sleep(0.5)
+                time.sleep(1)
                 SendPhoto(bot, eni, "Buy Order")
 
 
@@ -242,11 +242,11 @@ def main(name):
                 orderSell_flag = False
 
                 result = MT5.order(symbol=symbol, buysell="sell", volume=volume, slpercent=0.002, tppercent=0.02,
-                                   comment="Golden", magic=2299)
+                                   comment="Order Sell", magic=2299)
                 # writeWords(symbol=symbol, timeframe=timeframe, msg=result)
 
                 text += f"Sell Order"
-                time.sleep(0.5)
+                time.sleep(1)
                 SendPhoto(bot, eni, "Sell Order")
 
 
