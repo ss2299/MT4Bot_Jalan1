@@ -195,9 +195,10 @@ def main(name):
                 CCI_status_order = 1            # Make Unable Buy Position Open at Bottom
                 CCI_status_close = -1           # Make Unable Sell position close
 
-                # if MT5.positions_total() > 0:
-                    # MT5.closeAll(symbol=symbol)
-                    # MT5.closePosition(symbol=symbol, position="sell")
+                if init == True:
+                    init = False
+                    continue
+
                 closeSell_flag = True
 
 
@@ -207,9 +208,9 @@ def main(name):
                 CCI_status_order = -1           # Sell Position Open
                 CCI_status_close = 1            # Buy Position Close
 
-                # if MT5.positions_total() > 0:
-                    # MT5.closeAll(symbol=symbol)
-                    # MT5.closePosition(symbol=symbol, position="buy")
+                if init == True:
+                    init = False
+                    continue
 
                 closeBuy_flag = True
 
