@@ -55,20 +55,18 @@ def main(name):
     obos_upper_cnt = 0
     obos_lower_cnt = 0
     cnt_threshold = 7
-    obos_status_trend = 0       # 1 : Up, -1 : Down   -> for 1 time order
-    obos_upper_level = 0.7
-    obos_lower_level = -0.7
+    obos_status = 0       # 1 : Up, -1 : Down   -> for 1 time order
 
     ## Read Json file
     dc = DataCollect(symbol=symbol, timeframe=timeframe)
 
     ## CCI variable
-    CCI_OB_flag = False
-    CCI_OS_flag = False
-
-    ## Golden Line variable
-    GL_OB_flag = False
-    GL_OS_flag = False
+    CCI_upper_cnt = 0
+    CCI_lower_cnt = 0
+    CCI_status_order = 0        # 1 : Up, -1 : Down -> for 1 time order
+    CCI_status_close = 0        # 1 : Up, -1 : Down -> for 1 time order
+    CCI_OB = 100
+    CCI_OS = -100
 
     ## Buy, Sell Flag
     orderBuy_flag = False
@@ -98,29 +96,49 @@ def main(name):
             close = msg['close']
             obos_upper = msg['obos_upper']
             obos_lower = msg['obos_lower']
-            fl1_upper = msg['FL1_upper']
-            fl1_lower = msg['FL1_lower']
+            fl2_upper = msg['FL2_upper']
+            fl2_lower = msg['FL2_lower']
             gl_upper = msg['GL_upper']
             gl_lower = msg['GL_lower']
+            mid = msg['MID']
             cci = msg['CCI']
             ccima = msg['CCIMA']
 
+
+            # Check OBOS up or down
             if obos_upper > obos_lower:
                 obos_upper_cnt = obos_upper_cnt + 1
                 obos_lower_cnt = 0
+
             elif obos_lower > obos_upper:
                 obos_lower_cnt = obos_lower_cnt + 1
                 obos_upper_cnt = 0
+
+
+            # Check CCI up or down
+            if cci > CCI_OB:
+                CCI_upper_cnt = CCI_upper_cnt + 1
+                CCI_lower_cnt = 0
+
+
+
+            if cci < CCI_OS:
+                CCI_lower_cnt = CCI_lower_cnt + 1
+                CCI_upper_cnt = 0
+
+
+
+
 
             ## Current Zone Area
             zone_msg = ""
             if close >= gl_upper:
                 zone_msg = "GOLD UPPER"
                 zone = 2
-            elif close < gl_upper and close > fl1_upper:
+            elif close < gl_upper and close > fl2_upper:
                 zone_msg = "RED ZONE  "
                 zone = 1
-            elif close > gl_lower and close < fl1_lower:
+            elif close > gl_lower and close < fl2_lower:
                 zone_msg = "BLUE ZONE "
                 zone = -1
             elif close <= gl_lower:
@@ -132,150 +150,122 @@ def main(name):
 
 
 
-            now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            text = f"[{now}] OBOS UP:{obos_upper:.2f} ({obos_upper_cnt}), OBOS LO:{obos_lower:.2f} ({obos_lower_cnt}), Zone:{zone_msg}, "
 
 
 
-            # OB, OS Limit
-            CCI_OB = 200
-            CCI_OS = -200
+            # CCI Conditions
+            if CCI_upper_cnt > 0:
 
+                # Sell order at Bottom
+                if zone == 1 and cci <= CCI_OB and CCI_status_order != -1:          # Red Zone
+                    CCI_status_order = -1
+                    orderSell_flag = True
 
+                if zone == 2 and cci <= CCI_OB and CCI_status_order != -1:          # Golden Area Upper
+                    CCI_status_order = -1
+                    orderSell_flag = True
 
-            # Golden Line Trading
-            # Definition of Golden Area Condition (Upper)
-            if close >= gl_upper:
-                GL_OB_flag = True
-            elif GL_OB_flag and close < fl1_upper:
-                GL_OB_flag = False
-
-            # Definition of Golden Are Condition (Lower)
-            if close <= gl_lower:
-                GL_OS_flag = True
-            elif GL_OS_flag and close > fl1_lower:
-                GL_OS_flag = False
-
-            # CCI
-            ## OverBought
-            if cci > CCI_OB:
-                CCI_OB_flag = True
-
-            if CCI_OB_flag:
-                if cci < ccima or cci <= 100:
+                # Buy close at Top
+                if close > mid and cci <= CCI_OB and CCI_status_close != 1:        # Blue Zone
+                    CCI_status_close = 1
                     closeBuy_flag = True
 
-                    if GL_OB_flag:
-                        orderSell_flag = True
 
 
+            elif CCI_lower_cnt > 0:
 
+                # Buy order at Bottom
+                if zone == -1 and cci >= CCI_OS and CCI_status_order != 1:          # Blue Zone
+                    CCI_status_order = 1
+                    orderBuy_flag = True
 
-            ## OverSell
-            if cci < CCI_OS:
-                CCI_OS_flag = True
+                if zone == 2 and cci >= CCI_OS and CCI_status_order != 1:          # Golden Area Upper
+                    CCI_status_order = 1
+                    orderBuy_flag = True
 
-            if CCI_OS_flag:
-                if cci > ccima or cci >= -100:
+                # Sell close at Bottom
+                if close < mid and cci >= CCI_OS and CCI_status_close != -1:        # Blue Zone
+                    CCI_status_close = -1
                     closeSell_flag = True
 
-                    if GL_OS_flag:
-                        orderBuy_flag = True
+
+            ## Close ORDER by OBOS
+            if obos_upper_cnt >= cnt_threshold and obos_status != 1 :
+                obos_status = 1  # 1-time enter to this if phase, prevent multiple time enter during obos cycle.
+                CCI_status_order = 1            # Make Unable Buy Position Open at Bottom
+                CCI_status_close = -1           # Make Unable Sell position close
+
+                # if MT5.positions_total() > 0:
+                    # MT5.closeAll(symbol=symbol)
+                    # MT5.closePosition(symbol=symbol, position="sell")
+                closeSell_flag = True
+
+
+
+            elif obos_lower_cnt >= cnt_threshold and obos_status != -1:
+                obos_status = -1      # 1-time enter to this if phase, prevent multiple time enter during obos cycle.
+                CCI_status_order = -1           # Sell Position Open
+                CCI_status_close = 1            # Buy Position Close
+
+                # if MT5.positions_total() > 0:
+                    # MT5.closeAll(symbol=symbol)
+                    # MT5.closePosition(symbol=symbol, position="buy")
+
+                closeBuy_flag = True
+
+
+            # Logging
+            now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            text = f"[{now}] OBOS UP:{obos_upper:.2f} ({obos_upper_cnt}), OBOS LO:{obos_lower:.2f} ({obos_lower_cnt}), Zone:{zone_msg}, MID : {mid}"
+
+            text += f"   CCI:{cci} , CCIUP:{CCI_upper_cnt}, CCIDN: {CCI_lower_cnt} , CCI_status_order : {CCI_status_order}, CCI_status_close : {CCI_status_close}"
 
 
 
 
-            text += f"CCI:{cci} ,  CCISMA:{ccima} , OB_flag:{CCI_OB_flag} , OS_flag:{CCI_OS_flag}, OBOS_Status : {obos_status_trend},  "
+            # Order Buy
+            if orderBuy_flag == True:
+                orderBuy_flag = False
+
+                result = MT5.order(symbol=symbol, buysell="buy", volume=volume, slpercent=0.002, tppercent=0.02,
+                                   comment="", magic=2299)
+                # writeWords(symbol=symbol, timeframe=timeframe, msg=result)
+
+                text += f"Buy Order"
+                time.sleep(0.5)
+                SendPhoto(bot, eni, "Buy Order")
 
 
-            # Close by CCI Condition
-            if closeBuy_flag:
+            # Order Sell
+            if orderSell_flag == True:
+                orderSell_flag = False
+
+                result = MT5.order(symbol=symbol, buysell="sell", volume=volume, slpercent=0.002, tppercent=0.02,
+                                   comment="Golden", magic=2299)
+                # writeWords(symbol=symbol, timeframe=timeframe, msg=result)
+
+                text += f"Sell Order"
+                time.sleep(0.5)
+                SendPhoto(bot, eni, "Sell Order")
+
+
+            # Close Buy
+            if closeBuy_flag == True:
+                closeBuy_flag = False
+
                 if MT5.positions_total() > 0:
                     text += f"Buy ({MT5.positions_total()}) positions are closed by condition"
                     MT5.closePosition(symbol=symbol, position="buy")
 
-                closeBuy_flag = False
-                CCI_OB_flag = False
 
 
-            if closeSell_flag:
+            # Close Sell
+            if closeSell_flag == True:
+                closeSell_flag = False
+
                 if MT5.positions_total() > 0:
                     text += f"Sell ({MT5.positions_total()}) positions are closed by condition"
                     MT5.closePosition(symbol=symbol, position="sell")
-
-                closeSell_flag = False
-                CCI_OS_flag = False
-
-
-            if orderBuy_flag:
-                result = MT5.order(symbol=symbol, buysell="buy", volume=volume, slpercent=0.002, tppercent=0.00315,
-                          comment="Golden", magic=2299)
-                orderBuy_flag = False
-                time.sleep(0.2)
-                SendPhoto(bot, eni, "Buy Order by Golden , " + result)
-
-            if orderSell_flag:
-                result = MT5.order(symbol=symbol, buysell="sell", volume=volume, slpercent=0.002, tppercent=0.00315,
-                          comment="Golden", magic=2299)
-                orderSell_flag = False
-                time.sleep(0.2)
-                SendPhoto(bot, eni, "Sell Order by Golden , ")
-
-
-
-
-            ## Enter ORDER by OBOS
-            if obos_upper_cnt >= cnt_threshold and obos_status_trend != 1 :
-                obos_status_trend = 1  # 1-time enter to this if phase, prevent multiple time enter during obos cycle.
-
-                if init == True:
-                    init = False
-                    SendPhoto(bot, eni, "init in obos up")
-                    continue
-                if MT5.positions_total() > 0:
-                    # MT5.closeAll(symbol=symbol)
-                    MT5.closePosition(symbol=symbol, position="sell")
-
-                # Filtering small wave channel
-                # if obos_lower < fl1_lower and obos_lower < obos_lower_level:
-                # if zone != 0:
-                result = MT5.order(symbol=symbol, buysell="buy", volume=volume, slpercent=0.002, tppercent=0.00315, comment="OBOS", magic=2299)
-                text += "Buy Order is Completed by OBOS"
-                CCI_OB_flag = False             # Filter CCI close condition when enter order.
-
-                time.sleep(0.2)
-                SendPhoto(bot, eni, "Buy Order by OBOS , ")
-
-
-
-            elif obos_lower_cnt >= cnt_threshold and obos_status_trend != -1:
-                obos_status_trend = -1      # 1-time enter to this if phase, prevent multiple time enter during obos cycle.
-                obos_status_golden = -1     # For GoldenLine Area
-
-                if init == True:
-                    init = False
-                    SendPhoto(bot, eni, "init in obos dn")
-                    continue
-                if MT5.positions_total() > 0:
-                    # MT5.closeAll(symbol=symbol)
-                    MT5.closePosition(symbol=symbol, position="buy")
-
-
-
-                # Filtering small wave channel
-                # if obos_lower > fl1_upper and obos_lower > obos_upper_level:
-                # if zone != 0:
-                result = MT5.order(symbol=symbol, buysell="sell", volume=volume, slpercent=0.002, tppercent=0.00315, comment="OBOS", magic=2299)
-                text += "Sell Order is Completed by OBOS"
-                CCI_OS_flag = False  # Filter CCI close condition when enter order.
-
-                time.sleep(0.2)
-                SendPhoto(bot, eni, "Sell Order by OBOS , ")
-
-
-
-
-
 
 
             # Print Message
